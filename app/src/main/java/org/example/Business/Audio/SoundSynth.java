@@ -4,7 +4,7 @@ package org.example.Business.Audio;
  * Abstract base class for synthesizers.
  * Defines the contract for making sound.
  */
-public abstract class Synth {
+public abstract class SoundSynth {
     
     // Standard CD quality sample rate (44.1 kHz)
     protected static final float SAMPLE_RATE = 44100f;

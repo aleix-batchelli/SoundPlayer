@@ -9,21 +9,14 @@ import java.util.List;
  */
 public class Song {
 
-    // --- Metadatos (Campos obligatorios según ) ---
-    private String id;              // 
-    private String title;           // 
-    private String artist;          // 
-    private int durationSeconds;    // 
-    private String style;           // 
-    
-    private Mood mood;              // 
-    private boolean playable;       // 
-
-    // --- Datos de Reproducción ---
-    // Lista de objetos Note (frecuencia, duración) 
+    private String id;               
+    private String title;            
+    private String artist;           
+    private int durationSeconds;    
+    private String style;           
+    private Mood mood;              
+    private boolean playable;       
     private List<Note> notes;
-
-    // --- Constructores ---
 
     /**
      * Constructor vacío requerido para la deserialización de JSON (Gson).
@@ -45,8 +38,6 @@ public class Song {
         this.mood = mood;
         this.notes = new ArrayList<>();
     }
-
-    // --- Getters y Setters (Encapsulamiento ) ---
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

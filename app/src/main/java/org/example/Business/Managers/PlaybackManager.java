@@ -1,7 +1,7 @@
 package org.example.Business.Managers;
 
-import org.example.Business.Audio.SinusSynth;
-import org.example.Business.Audio.Synth;
+import org.example.Business.Audio.SoundSynthSinus;
+import org.example.Business.Audio.SoundSynth;
 import org.example.Business.Model.Note;
 import org.example.Business.Model.Playlist;
 import org.example.Business.Model.Song;
@@ -10,11 +10,11 @@ import java.util.List;
 
 public class PlaybackManager {
 
-    private final Synth synth;
+    private final SoundSynth synth;
 
     public PlaybackManager() {
         // Inicializamos el sintetizador concreto (SinusSynth)
-        this.synth = new SinusSynth();
+        this.synth = new SoundSynthSinus();
     }
 
     /**

@@ -9,7 +9,7 @@ skinparam classAttributeIconSize 0
 title SoundPlayer - Layered Architecture (Final)
 
 ' --- PRESENTATION LAYER ---
-package "org.example.Presentation" {
+package "Presentation" {
     class ViewController {
         + start()
         - handleMainMenu()
@@ -30,7 +30,7 @@ package "org.example.Presentation" {
 }
 
 ' --- BUSINESS LAYER ---
-package "org.example.Business" {
+package "Business" {
     
     package "Model" {
         enum Mood {
@@ -68,7 +68,6 @@ package "org.example.Business" {
         }
     }
 
-    ' RENAMED PACKAGE: MANAGERS
     package "Managers" {
         class LibraryManager {
             + getAllSongs() : List<Song>
@@ -78,8 +77,7 @@ package "org.example.Business" {
             + addSongToPlaylist(pId : String, sId : String)
         }
 
-        ' RENAMED CLASS: AlbumManager
-        class AlbumManager {
+        class AlbumGenerator {
             + generateRandomAlbum(mood : Mood, maxDuration : int) : Playlist
         }
 
@@ -89,20 +87,23 @@ package "org.example.Business" {
         }
     }
 
-    ' RENAMED PACKAGE TO "Audio" TO AVOID NAME COLLISION
     package "Audio" {
-        abstract class Synth {
+        abstract class SoundSynth {
             + {abstract} makeSound(freq : double, ms : int)
         }
 
-        class SinusSynth {
+        class SoundSynthSinus {
+            + makeSound(freq : double, ms : int)
+        }
+
+        class SoundSynthSquare {
             + makeSound(freq : double, ms : int)
         }
     }
 }
 
 ' --- PERSISTENCE LAYER ---
-package "org.example.Persistence" {
+package "Persistence" {
     interface SongsDAO {
         + loadAll() : List<Song>
         + saveAll(songs : List<Song>)
@@ -127,7 +128,8 @@ package "org.example.Persistence" {
 ' --- RELATIONSHIPS ---
 
 ' Implementation & Inheritance
-Synth <|-- SinusSynth
+SoundSynth <|-- SoundSynthSinus
+SoundSynth <|-- SoundSynthSquare
 SongsDAO <|.. JsonSongsDAO
 PlaylistsDAO <|.. JsonPlaylistsDAO
 
@@ -135,13 +137,13 @@ PlaylistsDAO <|.. JsonPlaylistsDAO
 ViewController --> UI : uses
 ViewController --> LibraryManager : uses
 ViewController --> PlaybackManager : uses
-ViewController --> AlbumManager : uses
+ViewController --> AlbumGenerator : uses
 
 ' Business Layer Relationships
 LibraryManager --> SongsDAO : uses
 LibraryManager --> PlaylistsDAO : uses
-AlbumManager ..> LibraryManager : uses
-PlaybackManager --> Synth : uses
+AlbumGenerator ..> LibraryManager : uses
+PlaybackManager --> SoundSynth : uses
 
 ' Model Composition
 Song *-- Mood

@@ -5,7 +5,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-public class SinusSynth extends Synth {
+public class SoundSynthSinus extends SoundSynth {
 
     @Override
     public void makeSound(double freq, int durationMs) {
