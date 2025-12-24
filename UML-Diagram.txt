@@ -1,0 +1,155 @@
+@startuml
+
+' VISUAL SETTINGS
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam classAttributeIconSize 0
+
+title SoundPlayer - Layered Architecture (Final)
+
+' --- PRESENTATION LAYER ---
+package "org.example.Presentation" {
+    class ViewController {
+        + start()
+        - handleMainMenu()
+        - handleSongsManagement()
+        - handlePlaylistsManagement()
+        - handlePlayback()
+        - handleRandomAlbum()
+    }
+
+    class UI {
+        + showMainMenu() : int
+        + printMessage(msg : String)
+        + readInput(prompt : String) : String
+        + displaySongList(songs : List<Song>)
+        + displayPlaylistDetails(p : Playlist)
+        + readSongData() : Song
+    }
+}
+
+' --- BUSINESS LAYER ---
+package "org.example.Business" {
+    
+    package "Model" {
+        enum Mood {
+            HAPPY
+            SAD
+            RELAX
+            ENERGETIC
+        }
+
+        class Song {
+            - id : String
+            - title : String
+            - artist : String
+            - durationSeconds : int
+            - style : String
+            - playable : boolean
+            - notes : List<Note>
+            + getMood() : Mood
+            + isPlayable() : boolean
+        }
+        
+        class Note {
+            - frequency : double
+            - durationMs : int
+        }
+
+        class Playlist {
+            - id : String
+            - name : String
+            - description : String
+            - songIds : List<String>
+            + getTotalDuration() : int
+            + getPlayableCount() : int
+            + addSongId(id : String)
+        }
+    }
+
+    ' RENAMED PACKAGE: MANAGERS
+    package "Managers" {
+        class LibraryManager {
+            + getAllSongs() : List<Song>
+            + addSong(song : Song)
+            + deleteSong(id : String)
+            + createPlaylist(p : Playlist)
+            + addSongToPlaylist(pId : String, sId : String)
+        }
+
+        ' RENAMED CLASS: AlbumManager
+        class AlbumManager {
+            + generateRandomAlbum(mood : Mood, maxDuration : int) : Playlist
+        }
+
+        class PlaybackManager {
+            + playSong(s : Song)
+            + playPlaylist(p : Playlist)
+        }
+    }
+
+    ' RENAMED PACKAGE TO "Audio" TO AVOID NAME COLLISION
+    package "Audio" {
+        abstract class Synth {
+            + {abstract} makeSound(freq : double, ms : int)
+        }
+
+        class SinusSynth {
+            + makeSound(freq : double, ms : int)
+        }
+    }
+}
+
+' --- PERSISTENCE LAYER ---
+package "org.example.Persistence" {
+    interface SongsDAO {
+        + loadAll() : List<Song>
+        + saveAll(songs : List<Song>)
+    }
+
+    interface PlaylistsDAO {
+        + loadAll() : List<Playlist>
+        + saveAll(playlists : List<Playlist>)
+    }
+
+    class JsonSongsDAO {
+        - filePath : String
+        - gson : Gson
+    }
+
+    class JsonPlaylistsDAO {
+        - filePath : String
+        - gson : Gson
+    }
+}
+
+' --- RELATIONSHIPS ---
+
+' Implementation & Inheritance
+Synth <|-- SinusSynth
+SongsDAO <|.. JsonSongsDAO
+PlaylistsDAO <|.. JsonPlaylistsDAO
+
+' Presentation Layer Relationships
+ViewController --> UI : uses
+ViewController --> LibraryManager : uses
+ViewController --> PlaybackManager : uses
+ViewController --> AlbumManager : uses
+
+' Business Layer Relationships
+LibraryManager --> SongsDAO : uses
+LibraryManager --> PlaylistsDAO : uses
+AlbumManager ..> LibraryManager : uses
+PlaybackManager --> Synth : uses
+
+' Model Composition
+Song *-- Mood
+Song *-- Note
+Playlist o-- Song
+
+' Persistence Dependencies
+JsonSongsDAO ..> Song
+JsonPlaylistsDAO ..> Playlist
+
+@enduml
