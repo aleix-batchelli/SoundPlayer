@@ -1,0 +1,5 @@
+- Que els cançons siguin reproduibles
+- LLenguatge de la app
+- Creacio de albums per mood
+- Afegir cançons a playlists
+- comentaris

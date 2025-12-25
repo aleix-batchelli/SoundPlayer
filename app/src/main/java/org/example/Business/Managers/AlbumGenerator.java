@@ -3,9 +3,12 @@ package org.example.Business.Managers;
 import org.example.Business.Model.Mood;
 import org.example.Business.Model.Playlist;
 import org.example.Business.Model.Song;
+import org.example.CustomExceptions.EmptyJsonFileException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EmptyStackException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -14,7 +17,7 @@ import java.util.stream.Collectors;
  * Manages the logic for generating random albums based on specific criteria.
  * Logic defined in Source[cite: 154].
  */
-public class AlbumManager {
+public class AlbumGenerator {
 
     private final LibraryManager libraryManager;
 
@@ -22,7 +25,7 @@ public class AlbumManager {
      * Constructor requires LibraryManager to access the song library.
      * Corresponds to the relationship: AlbumManager ..> LibraryManager : uses
      */
-    public AlbumManager(LibraryManager libraryManager) {
+    public AlbumGenerator(LibraryManager libraryManager) {
         this.libraryManager = libraryManager;
     }
 
@@ -33,7 +36,7 @@ public class AlbumManager {
      * @param maxDurationSeconds The target duration in seconds[cite: 124].
      * @return A new Playlist object containing the random selection.
      */
-    public Playlist generateRandomAlbum(Mood mood, int maxDurationSeconds) {
+    public Playlist generateRandomAlbum(Mood mood, int maxDurationSeconds) throws EmptyJsonFileException, IOException {
         // 1. Filter songs: Must match Mood and be Playable 
         List<Song> candidates = libraryManager.getAllSongs().stream()
                 .filter(s -> s.getMood() == mood)
@@ -44,7 +47,7 @@ public class AlbumManager {
         Collections.shuffle(candidates);
 
         // 3. Select songs to fill the duration
-        List<String> selectedSongIds = new ArrayList<>();
+        List<Integer> selectedSongIds = new ArrayList<>();
         int currentDuration = 0;
 
         // Logic: Keep adding while we are under the target duration.
@@ -59,14 +62,14 @@ public class AlbumManager {
 
         // 4. Create the Playlist object
         // "La playlist generada debe... ser visible en el listado normal" [cite: 134]
-        String id = UUID.randomUUID().toString();
+        int id = (int) (System.currentTimeMillis() % 100000); // Simple unique ID based on timestamp
         String name = "Random " + mood + " Album";
         String description = "Generated album (" + (maxDurationSeconds / 60) + " min target)";
 
         Playlist randomPlaylist = new Playlist(id, name, description);
         
         // Add the selected IDs to the playlist object
-        for (String sId : selectedSongIds) {
+        for (int sId : selectedSongIds) {
             randomPlaylist.addSongId(sId);
         }
 

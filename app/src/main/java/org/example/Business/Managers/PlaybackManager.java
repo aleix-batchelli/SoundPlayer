@@ -50,18 +50,18 @@ public class PlaybackManager {
      * Requiere LibraryManager para resolver los IDs de las canciones.
      [cite_start]* [cite: 114, 115, 116]
      */
-    public void playPlaylist(Playlist p, LibraryManager libraryManager) {
+    public void playPlaylist(Playlist p, LibraryManager libraryManager) throws Exception {
         if (p == null) return;
 
         System.out.println("\n>> Iniciando Playlist: " + p.getName());
-        List<String> songIds = p.getSongIds();
+        List<Integer> songIds = p.getSongIds();
 
         if (songIds.isEmpty()) {
             System.out.println(">> La playlist está vacía.");
             return;
         }
 
-        for (String id : songIds) {
+        for (int id : songIds) {
             Song s = libraryManager.getSongById(id);
             
             if (s != null) {

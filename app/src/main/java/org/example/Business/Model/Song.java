@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Song {
 
-    private String id;               
+    private int id;               
     private String title;            
     private String artist;           
     private int durationSeconds;    
@@ -28,7 +28,7 @@ public class Song {
     /**
      * Constructor básico con metadatos.
      */
-    public Song(String id, String title, String artist, int durationSeconds, String style, boolean playable, Mood mood) {
+    public Song(int id, String title, String artist, int durationSeconds, String style, boolean playable, Mood mood) {
         this.id = id;
         this.title = title;
         this.artist = artist;
@@ -39,8 +39,8 @@ public class Song {
         this.notes = new ArrayList<>();
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -75,5 +75,20 @@ public class Song {
             this.notes = new ArrayList<>();
         }
         this.notes.add(note);
+    }
+
+    @Override
+    public String toString() {
+        // Calculate minutes and seconds
+        int minutes = durationSeconds / 60;
+        int seconds = durationSeconds % 60;
+
+        // Determine status string
+        String status = playable ? "PLAYABLE" : "NOT PLAYABLE";
+
+        // Return formatted string
+        // Example output: "Song Title - Artist Name [3:45] (Mood) [PLAYABLE]"
+        return String.format("%s - %s [%d:%02d] (%s) [%s]", 
+                title, artist, minutes, seconds, mood, status);
     }
 }

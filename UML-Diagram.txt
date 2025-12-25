@@ -6,7 +6,7 @@ skinparam nodesep 60
 skinparam ranksep 60
 skinparam classAttributeIconSize 0
 
-title SoundPlayer - Layered Architecture (Final)
+title SoundPlayer - Layered Architecture (Final Version)
 
 ' --- PRESENTATION LAYER ---
 package "Presentation" {
@@ -23,6 +23,7 @@ package "Presentation" {
         + showMainMenu() : int
         + printMessage(msg : String)
         + readInput(prompt : String) : String
+        + askForInt(prompt : String) : int
         + displaySongList(songs : List<Song>)
         + displayPlaylistDetails(p : Playlist)
         + readSongData() : Song
@@ -41,30 +42,28 @@ package "Business" {
         }
 
         class Song {
-            - id : String
+            - id : int
             - title : String
             - artist : String
             - durationSeconds : int
             - style : String
             - playable : boolean
-            - notes : List<Note>
+            - notes : List<String>
             + getMood() : Mood
             + isPlayable() : boolean
-        }
-        
-        class Note {
-            - frequency : double
-            - durationMs : int
+            + toString() : String
         }
 
         class Playlist {
-            - id : String
+            - id : int
             - name : String
             - description : String
-            - songIds : List<String>
-            + getTotalDuration() : int
-            + getPlayableCount() : int
-            + addSongId(id : String)
+            - songIds : List<Integer>
+            - duration : int
+            + getTotalDuration(library : List<Song>) : int
+            + getPlayableCount(library : List<Song>) : int
+            + addSongId(id : int)
+            + getDetailedString(library : List<Song>) : String
         }
     }
 
@@ -72,9 +71,10 @@ package "Business" {
         class LibraryManager {
             + getAllSongs() : List<Song>
             + addSong(song : Song)
-            + deleteSong(id : String)
+            + deleteSong(id : int)
             + createPlaylist(p : Playlist)
-            + addSongToPlaylist(pId : String, sId : String)
+            + addSongToPlaylist(pId : int, sId : int)
+            + getAllPlaylists() : List<Playlist>
         }
 
         class AlbumGenerator {
@@ -83,7 +83,7 @@ package "Business" {
 
         class PlaybackManager {
             + playSong(s : Song)
-            + playPlaylist(p : Playlist)
+            + playPlaylist(p : Playlist, lib : LibraryManager)
         }
     }
 
@@ -125,6 +125,25 @@ package "Persistence" {
     }
 }
 
+' --- CUSTOM EXCEPTIONS ---
+package "CustomExceptions" {
+    class Exception {
+        (Java Standard)
+    }
+    
+    class EmptyJsonFileException
+    class InvalidInputException
+    
+    ' Children of EmptyJsonFileException
+    class NoPlaylistsException
+    class NoSongsException
+    
+    ' Children of NotFoundException
+    class NotFoundException
+    class PlaylistNotFoundException
+    class SongNotFoundException
+}
+
 ' --- RELATIONSHIPS ---
 
 ' Implementation & Inheritance
@@ -132,6 +151,19 @@ SoundSynth <|-- SoundSynthSinus
 SoundSynth <|-- SoundSynthSquare
 SongsDAO <|.. JsonSongsDAO
 PlaylistsDAO <|.. JsonPlaylistsDAO
+
+' Exception Inheritance
+Exception <|-- EmptyJsonFileException
+Exception <|-- InvalidInputException
+Exception <|-- NotFoundException
+
+' Logic: If the file is empty, it implies no songs/playlists found
+EmptyJsonFileException <|-- NoPlaylistsException
+EmptyJsonFileException <|-- NoSongsException
+
+' Logic: Specific types of "Not Found"
+NotFoundException <|-- PlaylistNotFoundException
+NotFoundException <|-- SongNotFoundException
 
 ' Presentation Layer Relationships
 ViewController --> UI : uses
@@ -147,11 +179,15 @@ PlaybackManager --> SoundSynth : uses
 
 ' Model Composition
 Song *-- Mood
-Song *-- Note
-Playlist o-- Song
+Playlist o-- Song : (Logic dependency)
 
 ' Persistence Dependencies
 JsonSongsDAO ..> Song
 JsonPlaylistsDAO ..> Playlist
+
+' Exception Dependencies (High Level)
+Persistence ..> EmptyJsonFileException : throws
+Managers ..> NotFoundException : throws
+UI ..> InvalidInputException : throws
 
 @enduml
