@@ -9,7 +9,10 @@ public class Playlist {
     private String name;
     private String description;
     private List<Integer> songIds;
-    private int duration;
+
+    // --- PRELOADED INFO (CACHED) ---
+    private int totalDuration; // In seconds
+    private int playableCount;
 
     public Playlist() {
         this.songIds = new ArrayList<>();
@@ -20,16 +23,56 @@ public class Playlist {
         this.name = name;
         this.description = description;
         this.songIds = new ArrayList<>();
+        this.totalDuration = 0;
+        this.playableCount = 0;
     }
 
-    public void addSongId(int songId) {
-        if (!this.songIds.contains(songId)) {
-            this.songIds.add(songId);
+    // --- MANAGEMENT METHODS (Update Cache) ---
+
+    /**
+     * Adds a song and updates the cached duration and playable count.
+     * Requires the full Song object to know its duration/status.
+     */
+    public void addSong(Song s) {
+        // Prevent duplicates
+        if (!this.songIds.contains(s.getId())) {
+            this.songIds.add(s.getId());
+            
+            // Update Cache
+            this.totalDuration += s.getDurationSeconds();
+            if (s.isPlayable()) {
+                this.playableCount++;
+            }
         }
     }
 
-    public int getTotalDuration(List<Song> library) {
-        int totalSeconds = 0;
+    /**
+     * Removes a song and updates the cached duration and playable count.
+     */
+    public void removeSong(Song s) {
+        if (this.songIds.contains(s.getId())) {
+            // Remove ID (Cast to Integer to remove by Object, not index)
+            this.songIds.remove((Integer) s.getId());
+
+            // Update Cache
+            this.totalDuration -= s.getDurationSeconds();
+            // Prevent negative duration just in case
+            if (this.totalDuration < 0) this.totalDuration = 0; 
+
+            if (s.isPlayable()) {
+                this.playableCount--;
+            }
+        }
+    }
+
+    /**
+     * Helper method to recalculate stats from scratch.
+     * Useful after loading from JSON or if a Song's details were edited.
+     */
+    public void recalculateStats(List<Song> library) {
+        this.totalDuration = 0;
+        this.playableCount = 0;
+
         for (Integer id : songIds) {
             Song s = library.stream()
                     .filter(song -> song.getId() == id)
@@ -37,26 +80,15 @@ public class Playlist {
                     .orElse(null);
             
             if (s != null) {
-                totalSeconds += s.getDurationSeconds();
+                this.totalDuration += s.getDurationSeconds();
+                if (s.isPlayable()) {
+                    this.playableCount++;
+                }
             }
         }
-        return totalSeconds;
     }
 
-    public int getPlayableCount(List<Song> library) {
-        int count = 0;
-        for (Integer id : songIds) {
-            Song s = library.stream()
-                    .filter(song -> song.getId() == id)
-                    .findFirst()
-                    .orElse(null);
-            
-            if (s != null && s.isPlayable()) {
-                count++;
-            }
-        }
-        return count;
-    }
+    // --- GETTERS & SETTERS ---
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -70,17 +102,25 @@ public class Playlist {
     public List<Integer> getSongIds() { return songIds; }
     public void setSongIds(List<Integer> songIds) { this.songIds = songIds; }
 
+    public int getTotalDuration() { return totalDuration; }
+    // No setter for duration, it is calculated automatically
+
+    public int getPlayableCount() { return playableCount; }
+    // No setter for playableCount, it is calculated automatically
+
+    // --- TO STRING ---
+
     @Override
     public String toString() {
-        int minutes = duration / 60;
-        int seconds = duration % 60;
+        int minutes = totalDuration / 60;
+        int seconds = totalDuration % 60;
 
-        return String.format("[ID: %d] %s - %s (%d songs) [%d:%02d]", 
-                id, 
+        // Meets requirement: Name, Num Songs, Duration, Playable Count
+        return String.format("Nombre: %-15s | Canciones: %-3d | Duración: %02d:%02d | Reproducibles: %d", 
                 name, 
-                description, 
                 songIds.size(), 
                 minutes, 
-                seconds);
+                seconds,
+                playableCount);
     }
 }

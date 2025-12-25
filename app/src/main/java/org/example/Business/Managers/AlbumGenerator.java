@@ -47,7 +47,7 @@ public class AlbumGenerator {
         Collections.shuffle(candidates);
 
         // 3. Select songs to fill the duration
-        List<Integer> selectedSongIds = new ArrayList<>();
+        List<Song> selectedSongs = new ArrayList<>();
         int currentDuration = 0;
 
         // Logic: Keep adding while we are under the target duration.
@@ -56,7 +56,7 @@ public class AlbumGenerator {
             if (currentDuration >= maxDurationSeconds) {
                 break;
             }
-            selectedSongIds.add(s.getId());
+            selectedSongs.add(s);
             currentDuration += s.getDurationSeconds();
         }
 
@@ -67,10 +67,10 @@ public class AlbumGenerator {
         String description = "Generated album (" + (maxDurationSeconds / 60) + " min target)";
 
         Playlist randomPlaylist = new Playlist(id, name, description);
-        
-        // Add the selected IDs to the playlist object
-        for (int sId : selectedSongIds) {
-            randomPlaylist.addSongId(sId);
+
+        // Add the selected songs to the playlist object
+        for (Song s : selectedSongs) {
+            randomPlaylist.addSong(s);
         }
 
         // 5. Requirement: Save to playlists.json

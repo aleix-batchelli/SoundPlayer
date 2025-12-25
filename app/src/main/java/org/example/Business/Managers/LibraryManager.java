@@ -142,7 +142,7 @@ public class LibraryManager {
         }
 
         // Add ID and save
-        playlist.addSongId(songId);
+        playlist.addSong(song);
         updatePlaylist(playlist);
     }
 

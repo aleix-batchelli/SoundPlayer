@@ -97,29 +97,7 @@ public class ConsoleView {
         }
     }
 
-    /**
-     * Displays details of a specific playlist.
-     * Updated to accept 'library' because Playlist needs it to calculate duration/counts.
-     */
-    public void displayPlaylistDetails(Playlist p, List<Song> library) {
-        if (p == null) {
-            printError("Playlist no encontrada.");
-            return;
-        }
-
-        // We must pass the library list to calculate totals
-        int totalSeconds = p.getTotalDuration(library);
-        String durationFmt = (totalSeconds / 60) + " min " + (totalSeconds % 60) + " s";
-
-        System.out.println("\n--- Detalles de la Playlist ---");
-        System.out.println("ID          : " + p.getId());
-        System.out.println("Nombre      : " + p.getName());
-        System.out.println("Descripción : " + p.getDescription());
-        System.out.println("Canciones   : " + p.getSongIds().size());
-        System.out.println("Duración    : " + durationFmt);
-        System.out.println("Playable    : " + p.getPlayableCount(library));
-        System.out.println("-------------------------------");
-    }
+    
 
     /**
      * Prompts user for data to create a new Song.

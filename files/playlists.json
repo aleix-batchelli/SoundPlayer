@@ -4,8 +4,9 @@
     "name": "asd",
     "description": "asd",
     "songIds": [
-      16174
+      59639
     ],
-    "duration": 0
+    "totalDuration": 123,
+    "playableCount": 1
   }
 ]

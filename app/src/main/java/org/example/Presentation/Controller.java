@@ -46,13 +46,12 @@ public class Controller {
                     handleRandomAlbum();
                     break;
                 default:
-                    // If option is -1 (error) or invalid
                     break;
             }
         }
     }
 
-    // --- 4.2. Gestión de canciones (INDEX BASED) ---
+    // --- 4.2. Gestión de canciones ---
     private void handleSongsManagement() {
         boolean back = false;
         while (!back) {
@@ -60,6 +59,7 @@ public class Controller {
             ui.printMessage("1. AÑADIR nueva canción");
             ui.printMessage("2. EDITAR canción existente");
             ui.printMessage("3. ELIMINAR canción");
+            ui.printMessage("4. LISTAR todas las canciones"); // NEW OPTION
             ui.printMessage("0. Volver");
 
             int action = 0;
@@ -82,53 +82,59 @@ public class Controller {
                     libraryManager.addSong(newSong);
                     ui.printMessage("Canción añadida correctamente.");
                 } 
+                
+                // CASE 4: LIST ONLY (NEW)
+                else if (action == 4) {
+                    List<Song> songs = libraryManager.getAllSongs();
+                    if (songs.isEmpty()) {
+                        ui.printMessage("(!) No hay canciones registradas.");
+                    } else {
+                        ui.printMessage("\n--- Listado Completo de Canciones ---");
+                        for (int i = 0; i < songs.size(); i++) {
+                            System.out.println((i + 1) + ". " + songs.get(i).toString());
+                        }
+                    }
+                    // Loop continues automatically, showing menu again
+                }
+
                 // CASE 2 & 3: EDIT / DELETE
                 else if (action == 2 || action == 3) {
                     
-                    // 1. Get List
                     List<Song> songs = libraryManager.getAllSongs();
                     if (songs.isEmpty()) {
                         ui.printMessage("(!) No hay canciones para modificar.");
                         continue;
                     }
 
-                    // 2. Show List with INDICES (1...N)
                     ui.printMessage("\n--- Seleccione una canción ---");
                     for (int i = 0; i < songs.size(); i++) {
                         System.out.println((i + 1) + ". " + songs.get(i).toString());
                     }
                     ui.printMessage("0. Cancelar");
 
-                    // 3. Select by Index
                     int index = -1;
                     try {
+                        // Assuming askForIntInRange is implemented in UI, otherwise use askForInt
                         index = ui.askForIntInRange("Introduzca el NÚMERO de la lista", 0, songs.size());
-                        if (index == 0) {
-                            continue; 
-                        }
+                        if (index == 0) continue; 
                     } catch (InvalidInputException e) {
                         ui.printError(e.getMessage());
                         continue;
                     }
-                    
 
-                    // Retrieve the actual object
                     Song selectedSong = songs.get(index - 1);
 
-                    // 4. Perform Logic
                     if (action == 2) {
                         // EDIT
                         ui.printMessage("Editando: " + selectedSong.getTitle());
                         Song newData = ui.editSongData(selectedSong);
                         
-                        // Update fields (Keep ID same)
                         selectedSong.setTitle(newData.getTitle());
                         selectedSong.setArtist(newData.getArtist());
                         selectedSong.setDurationSeconds(newData.getDurationSeconds());
                         selectedSong.setMood(newData.getMood());
                         selectedSong.setPlayable(newData.isPlayable());
                         
-                        // Save changes (if using DB, calling update method might be needed here)
                         libraryManager.updateSong(selectedSong); 
                         ui.printMessage("Canción editada correctamente.");
                         
@@ -146,8 +152,7 @@ public class Controller {
         }
     }
 
-    // --- 4.3. Gestión de Playlists (INDEX BASED) ---
-    // --- 4.3. Gestión de Playlists (UPDATED: Add/Delete Songs) ---
+    // --- 4.3. Gestión de Playlists ---
     private void handlePlaylistsManagement() {
         boolean back = false;
         while (!back) {
@@ -155,6 +160,7 @@ public class Controller {
             ui.printMessage("1. AÑADIR nueva playlist");
             ui.printMessage("2. EDITAR playlist (Añadir/Eliminar canciones)");
             ui.printMessage("3. ELIMINAR playlist");
+            ui.printMessage("4. LISTAR todas las playlists"); // NEW OPTION
             ui.printMessage("0. Volver");
 
             int action = 0;
@@ -181,24 +187,35 @@ public class Controller {
                     ui.printMessage("Playlist creada.");
                 }
                 
+                // CASE 4: LIST ONLY (NEW)
+                else if (action == 4) {
+                    List<Playlist> playlists = libraryManager.getAllPlaylists();
+                    if (playlists.isEmpty()) {
+                        ui.printMessage("(!) No hay playlists registradas.");
+                    } else {
+                        ui.printMessage("\n--- Listado Completo de Playlists ---");
+                        for (int i = 0; i < playlists.size(); i++) {
+                            // Using standard display logic
+                            System.out.println((i + 1) + ". " + playlists.get(i).toString());
+                        }
+                    }
+                }
+
                 // CASE 2 & 3: EDIT OR DELETE EXISTING PLAYLIST
                 else if (action == 2 || action == 3) {
                     
-                    // 1. Get List
                     List<Playlist> playlists = libraryManager.getAllPlaylists();
                     if (playlists.isEmpty()) {
                         ui.printMessage("(!) No hay playlists disponibles.");
                         continue;
                     }
                     
-                    // 2. Show List with Indices
                     ui.printMessage("\n--- Seleccione una Playlist ---");
                     for (int i = 0; i < playlists.size(); i++) {
                         System.out.println((i + 1) + ". " + playlists.get(i).getName() + 
                                 " (" + playlists.get(i).getSongIds().size() + " canciones)");
                     }
 
-                    // 3. Select Playlist Index
                     int pIndex = ui.askForInt("Introduzca el NÚMERO de la playlist");
                     
                     if (pIndex < 1 || pIndex > playlists.size()) {
@@ -208,7 +225,6 @@ public class Controller {
 
                     Playlist selectedPlaylist = playlists.get(pIndex - 1);
 
-                    // --- ACTION 2: EDIT (Add or Remove Songs) ---
                     if (action == 2) {
                         ui.printMessage("\nEditando: " + selectedPlaylist.getName());
                         ui.printMessage("1. AÑADIR canción");
@@ -216,39 +232,32 @@ public class Controller {
                         int subAction = ui.askForInt("Opción");
 
                         if (subAction == 1) {
-                            // --- SUB-ACTION: ADD SONG ---
+                            // ADD SONG logic
                             List<Song> allSongs = libraryManager.getAllSongs();
                             if (allSongs.isEmpty()) {
                                 ui.printMessage("No hay canciones en la biblioteca.");
                                 continue;
                             }
-
-                            // Show Library
                             ui.printMessage("--- Biblioteca General ---");
                             for (int i = 0; i < allSongs.size(); i++) {
                                 System.out.println((i + 1) + ". " + allSongs.get(i).toString());
                             }
-
                             int sIndex = ui.askForInt("Número de la canción a AÑADIR");
                             if (sIndex < 1 || sIndex > allSongs.size()) {
                                 ui.printError("Número inválido.");
                                 continue;
                             }
-
                             Song selectedSong = allSongs.get(sIndex - 1);
                             libraryManager.addSongToPlaylist(selectedPlaylist.getId(), selectedSong.getId());
                             ui.printMessage("Canción añadida correctamente.");
 
                         } else if (subAction == 2) {
-                            // --- SUB-ACTION: REMOVE SONG ---
+                            // REMOVE SONG logic
                             List<Integer> currentSongIds = selectedPlaylist.getSongIds();
-                            
                             if (currentSongIds.isEmpty()) {
                                 ui.printMessage("Esta playlist está vacía.");
                                 continue;
                             }
-
-                            // Show Songs currently IN the playlist
                             ui.printMessage("--- Canciones en esta Playlist ---");
                             for (int i = 0; i < currentSongIds.size(); i++) {
                                 int sId = currentSongIds.get(i);
@@ -256,24 +265,18 @@ public class Controller {
                                 String sName = (s != null) ? s.getTitle() : "[ID desconocido]";
                                 System.out.println((i + 1) + ". " + sName);
                             }
-
                             int removeIndex = ui.askForInt("Número de la canción a ELIMINAR");
                             if (removeIndex < 1 || removeIndex > currentSongIds.size()) {
                                 ui.printError("Número inválido.");
                                 continue;
                             }
-
-                            // Get the actual ID of the song at that index
                             int sIdToRemove = currentSongIds.get(removeIndex - 1);
-                            
-                            // Call Manager to remove it
                             libraryManager.removeSongFromPlaylist(selectedPlaylist.getId(), sIdToRemove);
                             ui.printMessage("Canción eliminada de la playlist.");
                         }
 
-                    } 
-                    // --- ACTION 3: DELETE PLAYLIST ---
-                    else {
+                    } else {
+                        // DELETE PLAYLIST
                         libraryManager.deletePlaylist(selectedPlaylist.getId());
                         ui.printMessage("Playlist eliminada correctamente.");
                     }
@@ -284,7 +287,7 @@ public class Controller {
         }
     }
 
-    // --- 5. Reproducción (Also Updated for Consistency) ---
+    // --- 5. Reproducción (Unchanged) ---
     private void handlePlayback() {
         ui.printMessage("\n--- Reproducción ---");
         ui.printMessage("1. Reproducir Canción");
@@ -301,12 +304,9 @@ public class Controller {
                         ui.printMessage("Biblioteca vacía.");
                         return;
                     }
-                    
-                    // Show List
                     for (int i = 0; i < songs.size(); i++) {
                         System.out.println((i + 1) + ". " + songs.get(i).toString());
                     }
-                    
                     int sIndex = ui.askForInt("Número de la canción a reproducir");
                     if (sIndex > 0 && sIndex <= songs.size()) {
                         Song s = songs.get(sIndex - 1);
@@ -326,11 +326,9 @@ public class Controller {
                         ui.printMessage("No hay playlists.");
                         return;
                     }
-                    
                     for (int i = 0; i < playlists.size(); i++) {
                         System.out.println((i + 1) + ". " + playlists.get(i).getName());
                     }
-                    
                     int pIndex = ui.askForInt("Número de la playlist a reproducir");
                     if (pIndex > 0 && pIndex <= playlists.size()) {
                         Playlist p = playlists.get(pIndex - 1);
